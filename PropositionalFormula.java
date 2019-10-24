@@ -9,7 +9,7 @@ import java.util.ListIterator;
 class PropositionalFormula extends SyntacticallyValidFormula {
 
   public String formula;
-  public String CNF;
+  public String CNF = "";
 
   public PropositionalFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
@@ -39,15 +39,18 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     */
   }
 
+  public String getCNF(){
+    if (this.CNF.equals("")){
+      return null;
+    }
+    return this.CNF;
+  }
+
   public boolean isCNF(){
     return isCNF(this.formula);
   }
 
-  /*
-   * TODO: Check start of expression
-   * TODO: What if there are no parantheses?
-   */
-  public boolean isCNF(String formula){
+  private boolean isCNF(String formula){
     boolean isCNF = true;
     if (containsWord(formula, new String[]{"implies"}, false)){
       System.out.printf("Formula '%s' is not in CNF as it contains an implication.\n", formula);
@@ -58,6 +61,7 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       isCNF = false;
     }
 
+    //Get terms between clauses
     List<String> clauses = new ArrayList<>();
     String regexClauses = "\\(([^)]+)\\)";
     String regexConjunctions = "\\)([^)]+)\\(";
@@ -74,32 +78,51 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       }
     }
 
-
+    //Check for disallowed words
     String[] disallowedWords = {"and", "implies", "equivalent"};
     if(containsWord(clauses, disallowedWords, false)){
       System.out.printf("Formula '%s' is not in CNF as it contains a clause which is not a disjunction.\n", formula);
       isCNF = false;
     }
 
-
-    /* Forgot that I did this check previously
-    for (int i = 0; i < split.length(); i++){
-      if (split[i].charAt[0] == '('){
-        if (split[i].charAt[1] == ')'){
-          System.out.println("Formula contains empty clause.");
+    //Check for disallowed NOTs, and add allowed atomos and negated atoms to clauses
+    String[] split = formula.split(" ");
+    for (int i = 0; i < split.length; i++){
+      if(split[i].length() == 1 && i > 0 && !(split[i-1].equals("not") || split[i-1].equals("(not"))){
+        clauses.add(split[i]);
+        continue;
+      }
+      if(split[i].equals("not")){
+        if (i == (split.length - 1)){
+          System.out.printf("Formula '%s' ends with an invalid 'not'-operator.\n", formula);
           isCNF = false;
-        }
-        if (split[i].substring[1] == "not"){
           continue;
         }
-        if (split[i].substring[1].length() == 1){
+        if (!(split[i+1].length() == 1) && !(split[i+1].length() == 2 && split[i+1].charAt(1) == ')')){
+          System.out.printf("Formula '%s' is not in CNF as it contains a non-atomic term '%s' after a 'not'-operator.\n", formula, split[i+1]);
+          isCNF = false;
           continue;
         }
-        System.out.printf("Word '%s' contains a non-(negated)atom after initial parantheses.\n", split[i]);
-        isCNF = false;
+        if (i == 0){
+          clauses.add("not " + split[i+1]);
+          continue;
+        }
+        if(!(split[i-1].equals("or"))){
+          clauses.add("not " + split[i+1]);
+        }
       }
     }
-    */
+
+    //If in CNF, write the clauses to the objects CNF-string.
+    if (isCNF){
+      ListIterator<String> iterator = clauses.listIterator();
+      while(iterator.hasNext()){
+        this.CNF = this.CNF.concat(iterator.next() + ",");
+      }
+    }
+    //Remove trailing comma
+    this.CNF = this.CNF.substring(0, this.CNF.length()-1);
+
     return isCNF;
   }
 
