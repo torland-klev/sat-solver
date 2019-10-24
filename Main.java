@@ -28,8 +28,11 @@ class Main{
     **/
 
     try{
-      Formula myFormula = new PropositionalFormula(args[0]);
+      PropositionalFormula myFormula = new PropositionalFormula(args[0]);
       System.out.printf("Formula '%s' is a syntactically valid propositional formula.\n", myFormula.getFormula());
+      if (myFormula.isCNF()){
+        System.out.printf("Formula '%s' is in CNF.\n", myFormula.getFormula());
+      };
     } catch(Exception e){
       e.printStackTrace();
     }

@@ -31,4 +31,6 @@ class Formula{
   public String getFormula(){
     return initialFormula;
   }
+
+
 }
