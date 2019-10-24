@@ -61,24 +61,25 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       isCNF = false;
     }
 
-    //Get terms between clauses
+    //Get clauses between ANDs
     List<String> clauses = new ArrayList<>();
     String regexClauses = "\\(([^)]+)\\)";
-    String regexConjunctions = "\\)([^)]+)\\(";
     Matcher m = Pattern.compile(regexClauses).matcher(formula);
     while(m.find()){
       //System.out.println(m.group(1));
       clauses.add(m.group(1));
     }
+
+    String regexConjunctions = "\\)([^)]+)\\(";
     m = Pattern.compile(regexConjunctions).matcher(formula);
     while(m.find()){
-      if(!(m.group(1).equals(" and "))){
-        System.out.printf("Formula '%s' is not in CNF as it contains operator '%s' between clauses.\n", formula, m.group(1));
+      if(containsWord(m.group(1), new String[]{"or"}, false)){
+        System.out.printf("Formula '%s' is not in CNF as it contains operator 'or'-operator between clauses.\n", formula);
         isCNF = false;
       }
     }
 
-    //Check for disallowed words
+    //Check for disallowed words between parantheses
     String[] disallowedWords = {"and", "implies", "equivalent"};
     if(containsWord(clauses, disallowedWords, false)){
       System.out.printf("Formula '%s' is not in CNF as it contains a clause which is not a disjunction.\n", formula);
@@ -119,9 +120,9 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       while(iterator.hasNext()){
         this.CNF = this.CNF.concat(iterator.next() + ",");
       }
+      //Remove trailing comma
+      this.CNF = this.CNF.substring(0, this.CNF.length()-1);
     }
-    //Remove trailing comma
-    this.CNF = this.CNF.substring(0, this.CNF.length()-1);
 
     return isCNF;
   }
@@ -138,7 +139,14 @@ class PropositionalFormula extends SyntacticallyValidFormula {
   }
 
   private boolean containsWord(String formula, String[] words, boolean shouldContain){
-    String[] split = formula.split(" ");
+    //charAt goes to shit if you get a ' ' in the split.
+    String[] split;
+    if (formula.charAt(0) == ' '){
+      split = formula.substring(1).split(" ");
+    }
+    else {
+      split = formula.split(" ");
+    }
     boolean contains = false;
 
     for (String s : split){

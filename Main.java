@@ -13,6 +13,7 @@ class Main{
       System.out.println("\tnot (A and B) equivalent not A or not B");
       System.out.println("\talways A implies A");
       System.out.println("\tnext A implies eventually A");
+      System.out.println("not A and not C and (A or B) and (C or D) and not D and (Y or R) and (not A or not B)");
       //System.out.println("\tall x exist y p(x) or q(y)");
       System.exit(1);
     }
