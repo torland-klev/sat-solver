@@ -5,11 +5,14 @@ import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.HashMap;
 
 class PropositionalFormula extends SyntacticallyValidFormula {
 
   public String formula;
-  public String CNF = "";
+  private String CNF = "";
+  private int[] vector;
+  List<Character> propositions;
 
   public PropositionalFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
@@ -118,13 +121,51 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     if (isCNF){
       ListIterator<String> iterator = clauses.listIterator();
       while(iterator.hasNext()){
-        this.CNF = this.CNF.concat(iterator.next() + ",");
+        this.CNF = this.CNF.concat("{" + iterator.next() + "}, ");
       }
       //Remove trailing comma
-      this.CNF = this.CNF.substring(0, this.CNF.length()-1);
+      this.CNF = this.CNF.substring(0, this.CNF.length()-2);
+      //Replace natural language
+      this.CNF = this.CNF.replaceAll("not ", "-");
+      this.CNF = this.CNF.replaceAll(" or ", "");
+      //Extract to bit-vector for processing
+      this.vector = extractBitVector(this.CNF);
     }
 
     return isCNF;
+  }
+
+  /**
+   * @params Clauses in form {<clause>} seperated by ", ".
+  **/
+  private int[] extractBitVector(String CNF){
+    //Start by extracting all propositions
+    this.propositions = new ArrayList<>();
+    for (int i = 0; i < CNF.length(); i++){
+      Character c = CNF.charAt(i);
+      if ((c == '{') || (c == '}') || (c == ' ') || (c == ',') || (c == '-')){
+        continue;
+      }
+      if (propositions.contains(c)){
+        continue;
+      }
+      propositions.add(c);
+    }
+
+    //Initialize a new array able to hold as many bits as propositions.
+    //An integer can hold 31 bits.
+    int[] ret = new int[propositions.size() / 32 + 1];
+    int index = 0;
+    int counter = 0;
+    for (Character c : propositions){
+      ret[index] = (ret[index] << 1) | 1;
+      counter++;
+      if (counter >=32 ){
+        index++;
+        counter = 0;
+      }
+    }
+    return ret;
   }
 
   private boolean containsWord(List<String> formulas, String[] words, boolean shouldContain){
