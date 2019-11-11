@@ -10,9 +10,10 @@ import java.util.HashMap;
 class PropositionalFormula extends SyntacticallyValidFormula {
 
   public String formula;
+  private List<String> clauseSet;
   private String CNF = "";
+  private Character[] propositions;
   private int[] vector;
-  List<Character> propositions;
 
   public PropositionalFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
@@ -118,18 +119,20 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     }
 
     //If in CNF, write the clauses to the objects CNF-string.
+    this.clauseSet = new ArrayList<>();
     if (isCNF){
       ListIterator<String> iterator = clauses.listIterator();
       while(iterator.hasNext()){
-        this.CNF = this.CNF.concat("{" + iterator.next() + "}, ");
+        String s = iterator.next();
+        s = s.replaceAll("not ", "-");
+        s = s.replaceAll(" or ", "");
+        this.clauseSet.add(s);
+        this.CNF = this.CNF.concat("{" + s + "}, ");
       }
       //Remove trailing comma
       this.CNF = this.CNF.substring(0, this.CNF.length()-2);
-      //Replace natural language
-      this.CNF = this.CNF.replaceAll("not ", "-");
-      this.CNF = this.CNF.replaceAll(" or ", "");
       //Extract to bit-vector for processing
-      this.vector = extractBitVector(this.CNF);
+      extractPropositions();
     }
 
     return isCNF;
@@ -138,34 +141,92 @@ class PropositionalFormula extends SyntacticallyValidFormula {
   /**
    * @params Clauses in form {<clause>} seperated by ", ".
   **/
-  private int[] extractBitVector(String CNF){
+  private void extractPropositions(){
     //Start by extracting all propositions
-    this.propositions = new ArrayList<>();
+    List<Character> props = new ArrayList<>();
     for (int i = 0; i < CNF.length(); i++){
-      Character c = CNF.charAt(i);
+      Character c = this.CNF.charAt(i);
       if ((c == '{') || (c == '}') || (c == ' ') || (c == ',') || (c == '-')){
         continue;
       }
-      if (propositions.contains(c)){
+      if (props.contains(c)){
         continue;
       }
-      propositions.add(c);
+      props.add(c);
+    }
+    this.propositions = new Character[props.size()];
+    this.propositions = props.toArray(this.propositions);
+    extractBitVector();
+  }
+
+  private void extractBitVector(){
+
+        //Initialize a new array able to hold as many bits as propositions.
+        //An integer can hold 31 bits.
+        this.vector = new int[this.propositions.length / 32 + 1];
+        int index = 0;
+        int counter = 0;
+        for (Character c : propositions){
+          vector[index] = (vector[index] << 1) | 1;
+          counter++;
+          if (counter >=32 ){
+            index++;
+            counter = 0;
+          }
+        }
+  }
+
+  public int bruteForce(){
+    return bruteForce(this.clauseSet, this.propositions, this.vector[0]);
+  }
+
+  private int bruteForce(List<String> clauses, Character[] propositions, int bitvector){
+    int check = 1;
+    // Map the literals to the interpreted value as decided by the bitvector.
+    HashMap<Character, Boolean> interpretation = new HashMap<>();
+    for (Character c : propositions){
+      interpretation.put(c, (bitvector & check) > 0);
+      check = check << 1;
+      System.out.println(interpretation.get(c));
     }
 
-    //Initialize a new array able to hold as many bits as propositions.
-    //An integer can hold 31 bits.
-    int[] ret = new int[propositions.size() / 32 + 1];
-    int index = 0;
-    int counter = 0;
-    for (Character c : propositions){
-      ret[index] = (ret[index] << 1) | 1;
-      counter++;
-      if (counter >=32 ){
-        index++;
-        counter = 0;
+    // Iterate through all clauses. If a clause is unsatisfied in the interpretation,
+    // recurse with decremented bitvector.
+    boolean sat = true;
+    for (String s : clauses){
+      if (!isClauseSatisfiable(s, interpretation)){
+        sat = false;
+        break;
       }
     }
-    return ret;
+    // All clauses satisfied by the interpretation.
+    if (sat) {
+      return bitvector;
+    }
+    if (bitvector > 0){
+      return bruteForce(clauses, propositions, (bitvector - 1));
+    }
+    return -1;
+  }
+
+  private boolean isClauseSatisfiable(String clause, HashMap<Character, Boolean> interpretation){
+    boolean negated = false;
+    //Iterate through each literal in the clause.
+    for (int i = 0; i < clause.length(); i++){
+      char c = clause.charAt(i);
+      if (c == '-'){
+        negated = true;
+        continue;
+      }
+      //True if literal is interpreted to true and not negated, or
+      //if literal is interpreted to false and negated. Classical XOR.
+      //If a literal is true, the clause is satisfied.
+      if (interpretation.get(c) ^ negated){
+        return true;
+      }
+      negated = false;
+    }
+    return false;
   }
 
   private boolean containsWord(List<String> formulas, String[] words, boolean shouldContain){

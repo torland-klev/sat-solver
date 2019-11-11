@@ -34,6 +34,13 @@ class Main{
       if (myFormula.isCNF()){
         System.out.printf("Formula '%s' is in CNF.\n", myFormula.getFormula());
         System.out.printf("The formula written in CNF is {%s}.\n", myFormula.getCNF());
+
+        int interpretation = myFormula.bruteForce();
+        if (interpretation >= 0){
+          System.out.println("Bruteforce method successful: " + interpretation);
+        } else {
+          System.out.println("Bruteforce method failed.");
+        }
       };
     } catch(Exception e){
       e.printStackTrace();
