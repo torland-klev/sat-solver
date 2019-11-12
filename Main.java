@@ -14,6 +14,7 @@ class Main{
       System.out.println("\talways A implies A");
       System.out.println("\tnext A implies eventually A");
       System.out.println("\tnot A and not C and (A or B) and (C or D) and not D and (Y or R) and (not A or not B)");
+      System.out.println("\tnot A and S and not Q and not C and (A or F) and (C or D) and (Y or R) and (not A or not B) and G and K and (not B or K) and U and T and not L and K and M and 8 and 9 and 1 and (not 8 or H or 9)");
       //System.out.println("\tall x exist y p(x) or q(y)");
       System.exit(1);
     }
@@ -27,7 +28,7 @@ class Main{
       System.exit(1);
     }
     **/
-
+    long time = System.currentTimeMillis();
     try{
       PropositionalFormula myFormula = new PropositionalFormula(args[0]);
       System.out.printf("Formula '%s' is a syntactically valid propositional formula.\n", myFormula.getFormula());
@@ -45,5 +46,7 @@ class Main{
     } catch(Exception e){
       e.printStackTrace();
     }
+    Long elapsedTime = System.currentTimeMillis() - time;
+    System.out.println("Time taken: " + elapsedTime);
   }
 }
