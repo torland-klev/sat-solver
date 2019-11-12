@@ -18,7 +18,7 @@ class Formula{
     String trimmed = untrimmed;
     //Remove equally many leading and trailing parantheses, if they exist.
     while(true){
-      if (trimmed.charAt(0) == '(' && trimmed.charAt(trimmed.length() - 1) == ')'){
+      if (trimmed.charAt(0) == '(' && trimmed.charAt(1) == '(' && trimmed.charAt(trimmed.length() - 1) == ')'){
         trimmed = trimmed.substring(1,trimmed.length()-1);
       }
       else {
