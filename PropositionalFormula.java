@@ -138,9 +138,6 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     return isCNF;
   }
 
-  /**
-   * @params Clauses in form {<clause>} seperated by ", ".
-  **/
   private void extractPropositions(){
     //Start by extracting all propositions
     List<Character> props = new ArrayList<>();
@@ -177,17 +174,68 @@ class PropositionalFormula extends SyntacticallyValidFormula {
   }
 
   public int bruteForce(){
+
+    HashMap<Character, Boolean> unitClauses = new HashMap<>();
+    for (String s : this.clauseSet){
+      for (int i = 0; i < s.length(); i++){
+        if( s.charAt(i) == '-' ){
+          unitClauses.put(s.charAt(i+1), false);
+          i++;
+          continue;
+        }
+        unitClauses.put(s.charAt(i), true);
+      }
+    }
+
     return bruteForce(this.clauseSet, this.propositions, this.vector[0]);
   }
-
   private int bruteForce(List<String> clauses, Character[] propositions, int bitvector){
-    int check = 1;
+
     // Map the literals to the interpreted value as decided by the bitvector.
     HashMap<Character, Boolean> interpretation = new HashMap<>();
+
+    while(bitvector > 0){
+      int check = 1;
+      interpretation.clear();
+      for (Character c : propositions){
+        interpretation.put(c, (bitvector & check) > 0);
+        check = check << 1;
+      }
+
+      // Iterate through all clauses. If a clause is unsatisfied in the interpretation,
+      // recurse with decremented bitvector.
+      boolean sat = true;
+      for (String s : clauses){
+        if (!isClauseSatisfiable(s, interpretation)){
+          sat = false;
+          break;
+        }
+      }
+      // All clauses satisfied by the interpretation.
+      if (sat) {
+        printInterpretation(propositions, bitvector);
+        return bitvector;
+      }
+      bitvector--;
+
+    }
+    return -1;
+  }
+
+
+  // With unitClauses
+  private int bruteForce(List<String> clauses, Character[] propositions, int bitvector, HashMap<Character, Boolean> interpretation, HashMap<Character, Boolean> unitClauses){
+    int check = 1;
+    // Map the literals to the interpreted value as decided by the bitvector.
+    interpretation.clear();
     for (Character c : propositions){
-      interpretation.put(c, (bitvector & check) > 0);
+      if (unitClauses.keySet().contains(c)){
+        interpretation.put(c, unitClauses.get(c));
+        System.out.println("Unit");
+      } else {
+        interpretation.put(c, (bitvector & check) > 0);
+      }
       check = check << 1;
-      System.out.println(interpretation.get(c));
     }
 
     // Iterate through all clauses. If a clause is unsatisfied in the interpretation,
@@ -204,7 +252,7 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       return bitvector;
     }
     if (bitvector > 0){
-      return bruteForce(clauses, propositions, (bitvector - 1));
+      return bruteForce(clauses, propositions, (bitvector - 1), interpretation, unitClauses);
     }
     return -1;
   }
@@ -227,6 +275,13 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       negated = false;
     }
     return false;
+  }
+
+  private void printInterpretation(Character[] propositions, int interpretation){
+    for (int i = 0; i < propositions.length; i++){
+      System.out.print(propositions[i] + " " + ((interpretation & (1 << i)) > 0) + " ");
+    }
+    System.out.println();
   }
 
   private boolean containsWord(List<String> formulas, String[] words, boolean shouldContain){
