@@ -12,8 +12,6 @@ class PropositionalFormula extends SyntacticallyValidFormula {
   public String formula;
   private List<String> clauseSet;
   private String CNF = "";
-  private Character[] propositions;
-  private int[] vector;
 
   public PropositionalFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
@@ -51,7 +49,14 @@ class PropositionalFormula extends SyntacticallyValidFormula {
   }
 
   public boolean isCNF(){
-    return isCNF(this.formula);
+    if (this.CNF.equals("")){
+      return isCNF(this.formula);
+    }
+    return true;
+  }
+
+  public List<String> getClauseSet(){
+    return this.clauseSet;
   }
 
   private boolean isCNF(String formula){
@@ -95,8 +100,10 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     for (int i = 0; i < split.length; i++){
       // I cant remember why some of these are needed..
       // Changed the first condition quite heftly, because it saved clauses wrong.
+      if (split[0].length() == 1 && i == 0){
+        clauses.add(split[0]);
+      }
       if((split[i].length() == 1) && (i > 0) && (!(split[i-1].equals("not")) && (!(split[i-1].equals("or"))) && (!(split[i-1].equals("(not"))))){
-
         clauses.add(split[i]);
         continue;
       }
@@ -120,7 +127,6 @@ class PropositionalFormula extends SyntacticallyValidFormula {
         }
       }
     }
-    System.out.println(clauses);
 
     //If in CNF, write the clauses to the objects CNF-string.
     this.clauseSet = new ArrayList<>();
@@ -135,157 +141,9 @@ class PropositionalFormula extends SyntacticallyValidFormula {
       }
       //Remove trailing comma
       this.CNF = this.CNF.substring(0, this.CNF.length()-2);
-      //Extract to bit-vector for processing
-      extractPropositions();
     }
 
     return isCNF;
-  }
-
-  private void extractPropositions(){
-    //Start by extracting all propositions
-    List<Character> props = new ArrayList<>();
-    for (int i = 0; i < CNF.length(); i++){
-      Character c = this.CNF.charAt(i);
-      if ((c == '{') || (c == '}') || (c == ' ') || (c == ',') || (c == '-')){
-        continue;
-      }
-      if (props.contains(c)){
-        continue;
-      }
-      props.add(c);
-    }
-    this.propositions = new Character[props.size()];
-    this.propositions = props.toArray(this.propositions);
-    extractBitVector();
-  }
-
-  private void extractBitVector(){
-
-        //Initialize a new array able to hold as many bits as propositions.
-        //An integer can hold 31 bits.
-        this.vector = new int[this.propositions.length / 32 + 1];
-        int index = 0;
-        int counter = 0;
-        for (Character c : propositions){
-          vector[index] = (vector[index] << 1) | 1;
-          counter++;
-          if (counter >=32 ){
-            index++;
-            counter = 0;
-          }
-        }
-  }
-
-  public int bruteForce(){
-    return bruteForce(this.clauseSet, this.propositions, this.vector[0]);
-  }
-  private int bruteForce(List<String> clauses, Character[] propositions, int bitvector){
-
-    // Map the literals to the interpreted value as decided by the bitvector.
-    HashMap<Character, Boolean> interpretation = new HashMap<>();
-
-    while(bitvector >= 0){
-      int check = 1;
-      interpretation.clear();
-      for (Character c : propositions){
-        interpretation.put(c, (bitvector & check) > 0);
-        check = check << 1;
-      }
-
-      // Iterate through all clauses. If a clause is unsatisfied in the interpretation,
-      // recurse with decremented bitvector.
-      boolean sat = true;
-      for (String s : clauses){
-        if (!isClauseSatisfiable(s, interpretation)){
-          sat = false;
-          break;
-        }
-      }
-      // All clauses satisfied by the interpretation.
-      if (sat) {
-        System.out.println("\nA satisfying interpretation: " + interpretation);
-        return bitvector;
-      }
-      bitvector--;
-
-    }
-    return -1;
-  }
-
-
-  public int bruteForceUnit(){
-
-    HashMap<Character, Boolean> unitClauses = new HashMap<>();
-    for (String s : this.clauseSet){
-      if (s.length() > 2)
-        continue;
-      if (s.charAt(0) == '-'){
-        unitClauses.put(s.charAt(1), false);
-      }
-      if (s.length() == 1){
-        unitClauses.put(s.charAt(0), true);
-      }
-    }
-    return bruteForce(this.clauseSet, this.propositions, this.vector[0], unitClauses);
-  }
-
-  private int bruteForce(List<String> clauses, Character[] propositions, int bitvector, HashMap<Character, Boolean> unitClauses){
-
-    // Map the literals to the interpreted value as decided by the bitvector.
-    HashMap<Character, Boolean> interpretation = new HashMap<>();
-    while(bitvector > 0){
-      int check = 1;
-      interpretation.clear();
-      for (Character c : propositions){
-        if (unitClauses.keySet().contains(c)){
-          interpretation.put(c, unitClauses.get(c));
-          if (!interpretation.get(c))
-            bitvector &= (bitvector ^ check);
-        } else {
-          interpretation.put(c, (bitvector & check) > 0);
-        }
-        check = check << 1;
-      }
-
-      // Iterate through all clauses. If a clause is unsatisfied in the interpretation,
-      // recurse with decremented bitvector.
-      boolean sat = true;
-      for (String s : clauses){
-        if (!isClauseSatisfiable(s, interpretation)){
-          sat = false;
-          break;
-        }
-      }
-      // All clauses satisfied by the interpretation.
-      if (sat) {
-        System.out.println("\nA satisfying interpretation: " + interpretation);
-        return bitvector;
-      }
-      bitvector--;
-
-    }
-    return -1;
-  }
-
-  private boolean isClauseSatisfiable(String clause, HashMap<Character, Boolean> interpretation){
-    boolean negated = false;
-    //Iterate through each literal in the clause.
-    for (int i = 0; i < clause.length(); i++){
-      char c = clause.charAt(i);
-      if (c == '-'){
-        negated = true;
-        continue;
-      }
-      //True if literal is interpreted to true and not negated, or
-      //if literal is interpreted to false and negated. Classical XOR.
-      //If a literal is true, the clause is satisfied.
-      if (interpretation.get(c) ^ negated){
-        return true;
-      }
-      negated = false;
-    }
-    return false;
   }
 
   private boolean containsWord(List<String> formulas, String[] words, boolean shouldContain){
