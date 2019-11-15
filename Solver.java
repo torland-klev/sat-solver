@@ -157,6 +157,7 @@ class Solver{
     return dpll(this.formula);
   }
 
+  //https://en.wikipedia.org/wiki/DPLL_algorithm
   private int dpll(PropositionalFormula f){
     // Avoid making changes to input
     PropositionalFormula formula = f;
