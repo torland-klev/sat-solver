@@ -27,6 +27,7 @@ class Main{
       System.out.println("No options specified.\n");
       System.out.println("\t-b\tbrute-force");
       System.out.println("\t-bu\tbrute-force with unit clause considerations");
+      System.out.println("\t-dpll\toriginal dpll-algorithm");
       System.out.println("\t-v\tgenerates a satisfiable CNF formula");
       System.out.println("\t-unsat\tgenerates an unsatisfiable CNF formula (default)");
       System.out.println("\t-first\tremoves the first clause in the generated unsatisfiable formula to make it satisfiable");
@@ -55,15 +56,16 @@ class Main{
     try{
       PropositionalFormula myFormula = (isInteger(args[0])) ? new PropositionalFormula(generateFormula(Integer.parseInt(args[0]), optList.contains("-v"), optList.contains("-first"), optList.contains("-unit"))) : new PropositionalFormula(args[0]);
 
-      System.out.printf("\nFormula '%s' is a syntactically valid propositional formula.\n", myFormula.getFormula());
+      System.out.println("\nFormula is a syntactically valid propositional formula.");
       if (myFormula.isCNF()){
-        System.out.printf("\nFormula '%s' is in CNF.\n", myFormula.getFormula());
+        Solver solver = new Solver(myFormula);
+        System.out.println("\nFormula is in CNF.");
         System.out.printf("\nThe formula written as a set of clauses is {%s}.\n\n", myFormula.getCNF());
 
         //Bruteforce uses ~minute for 13 variables.
         if (optList.contains("-b")){
           long time = System.nanoTime();
-          int interpretation = myFormula.bruteForce();
+          int interpretation = solver.bruteForce();
           if (interpretation >= 0){
             System.out.println("Bruteforce method successful: " + interpretation);
           } else {
@@ -75,7 +77,7 @@ class Main{
 
         if (optList.contains("-bu")){
           long time = System.nanoTime();
-          int interpretation = myFormula.bruteForceUnit();
+          int interpretation = solver.bruteForceUnit();
           if (interpretation >= 0){
             System.out.println("Bruteforce method with unit clauses successful: " + interpretation);
           } else {
@@ -85,6 +87,18 @@ class Main{
           System.out.println("Time (ns) taken for bruteforce with unit clauses: " + step);
         }
 
+        if (optList.contains("-dpll")){
+          long time = System.nanoTime();
+          int interpretation = solver.dpll();
+          if (interpretation >= 0){
+            System.out.println("DPLL successful: " + interpretation);
+          } else {
+            System.out.println("\nDPLL failed.");
+          }
+          long step = System.nanoTime() - time;
+          System.out.println("Time (ns) taken for DPLL: " + step);
+        }
+
 
       };
     } catch(Exception e){
@@ -92,7 +106,7 @@ class Main{
     }
   }
   private static String generateFormula(int n, boolean valid, boolean first, boolean unit){
-    Character[] literals = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    Character[] literals = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '2', '3', '4', '5', '6', '7', '8', '9'};
     int i = n;
     if (i > 31){
       i = 31;
