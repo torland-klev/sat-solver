@@ -32,7 +32,7 @@ class Main{
       System.out.println("\t-unsat\tgenerates an unsatisfiable CNF formula (default)");
       System.out.println("\t-first\tremoves the first clause in the generated unsatisfiable formula to make it satisfiable");
       System.out.println("\t-last\tremoves the last clause in the generated unsatisfiable formula to make it satisfiable (default)");
-      System.out.println("\t-unit\tadds a unit clause to the generated unsatisfiable formula to make it satisfiable (default)");
+      System.out.println("\t-unit\tadds a unit clause to the generated unsatisfiable formula to make it satisfiable");
       System.exit(1);
     }
     List<String> optList = new ArrayList<>();
@@ -86,7 +86,7 @@ class Main{
           long step = System.nanoTime() - time;
           System.out.println("Time (ns) taken for bruteforce with unit clauses: " + step);
         }
-
+        //DPLL uses ~8 seconds for 13 variables. Generating the formula takes for ever.
         if (optList.contains("-dpll")){
           long time = System.nanoTime();
           int interpretation = solver.dpll();
@@ -95,7 +95,7 @@ class Main{
           } else {
             System.out.println("\nDPLL failed.");
           }
-          long step = System.nanoTime() - time;
+          long step = (System.nanoTime() - time)/1000000;
           System.out.println("Time (ns) taken for DPLL: " + step);
         }
 

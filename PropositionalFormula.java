@@ -59,6 +59,17 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     return this.clauseSet;
   }
 
+  public void setClauseSet(List<String> cs){
+    this.clauseSet = new ArrayList<String>(cs);
+  }
+
+  public PropositionalFormula clone(){
+    PropositionalFormula ny = new PropositionalFormula(this.formula);
+    ny.isCNF();
+    ny.setClauseSet(this.clauseSet);
+    return ny;
+  }
+
   private boolean isCNF(String formula){
     boolean isCNF = true;
     if (containsWord(formula, new String[]{"implies"}, false)){
