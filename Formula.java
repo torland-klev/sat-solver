@@ -11,21 +11,20 @@ class Formula{
    * @param syntacticallyValidFormula a syntactically valid fomula.
    **/
   public Formula(String syntacticallyValidFormula){
-    initialFormula = trimParentheses(syntacticallyValidFormula);
+    trimParentheses(syntacticallyValidFormula);
+    initialFormula = syntacticallyValidFormula;
   }
 
-  protected String trimParentheses(String untrimmed){
-    String trimmed = untrimmed;
-    //Remove equally many leading and trailing parantheses, if they exist.
+  //Remove equally many leading and trailing parantheses, if they exist.
+  protected void trimParentheses(String s){
     while(true){
-      if (trimmed.charAt(0) == '(' && trimmed.charAt(1) == '(' && trimmed.charAt(trimmed.length() - 1) == ')'){
-        trimmed = trimmed.substring(1,trimmed.length()-1);
+      if (s.charAt(0) == '(' && s.charAt(1) == '(' && s.charAt(s.length() - 1) == ')'){
+        s = s.substring(1,s.length()-1);
       }
       else {
         break;
       }
     }
-    return trimmed;
   }
 
   public String getFormula(){

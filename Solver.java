@@ -155,7 +155,15 @@ class Solver{
     return -1;
   }
 
+  private List<String> trues = new ArrayList<>();
   public int dpll(){
+    int i = dpll(this.formula);
+    if (i > 0){
+      System.out.println("A satisfying interpretation: " + trues);
+    } else {
+      System.out.println("Formula is invalid.");
+    }
+
     return dpll(this.formula);
   }
 
@@ -164,9 +172,11 @@ class Solver{
     if (containsEmptyClause(formula)){
       return -1;
     }
+
     if (isConsistentSetOfLiterals(formula)){
-      System.out.println(formula.getClauseSet());
-      System.out.printf("Formula is a consistent set of literals.\n");
+      for (String s : formula.getClauseSet()){
+        trues.add(s);
+      }
       return 1;
     }
     List<String> unitClauses = extractUnitClauses(formula);
@@ -189,7 +199,6 @@ class Solver{
     Iterator<String> iter = formula.getClauseSet().iterator();
     String firstClause = iter.next();
     String literal = (firstClause.charAt(0) == '-') ? firstClause.substring(1,2) : firstClause.substring(0,1);
-
     PropositionalFormula branching = formula.clone();
     try {
       unitPropagate(literal, branching, false);
@@ -204,9 +213,12 @@ class Solver{
       } catch(Exception e){
         e.printStackTrace();
       }
+      if(!trues.contains("-"+literal))
+        trues.add("-" + literal);
       ret = dpll(branching);
+    } else {
+      trues.add(literal);
     }
-
     return ret;
   }
 

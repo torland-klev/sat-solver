@@ -9,7 +9,8 @@ class SyntacticallyValidFormula extends Formula{
 
   public SyntacticallyValidFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
-    if(!(isSyntacticallyValid(trimParentheses(syntacticallyValidFormula)))){
+    trimParentheses(syntacticallyValidFormula);
+    if(!(isSyntacticallyValid(syntacticallyValidFormula))){
       throw new IllegalArgumentException("Supplied argument is not a syntactically valid formula.");
     }
   }

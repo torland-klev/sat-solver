@@ -15,7 +15,8 @@ class PropositionalFormula extends SyntacticallyValidFormula {
 
   public PropositionalFormula(String syntacticallyValidFormula){
     super(syntacticallyValidFormula);
-    if(!(isPropositional(trimParentheses(syntacticallyValidFormula)))){
+    trimParentheses(syntacticallyValidFormula);
+    if(!(isPropositional(syntacticallyValidFormula))){
       throw new IllegalArgumentException("Supplied argument is not a syntactically valid propositional formula.");
     } else {
       this.formula = syntacticallyValidFormula;
@@ -111,6 +112,7 @@ class PropositionalFormula extends SyntacticallyValidFormula {
     for (int i = 0; i < split.length; i++){
       // I cant remember why some of these are needed..
       // Changed the first condition quite heftly, because it saved clauses wrong.
+      // Update: they are there for getting unit clauses and single literals!
       if (split[0].length() == 1 && i == 0){
         clauses.add(split[0]);
       }
