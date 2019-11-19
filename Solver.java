@@ -164,7 +164,7 @@ class Solver{
       System.out.println("Formula is invalid.");
     }
 
-    return dpll(this.formula);
+    return i;
   }
 
   //https://en.wikipedia.org/wiki/DPLL_algorithm
